@@ -1,16 +1,18 @@
-## Summary
+## Add `clear` subcommand to remove all tasks
 
-Greenfield implementation of a production-quality CLI todo application from the one-line brief.
+Adds a `todo clear` command that removes all tasks from persistent storage
+and prints how many tasks were removed.
 
-### What changed
+### Changes
 
-- **src/task.ts** — Task interface (`id`, `description`, `done`)
-- **src/storage.ts** — JSON file persistence at `~/.todo-cli/tasks.json` (load/save with directory creation)
-- **src/cli.ts** — CLI entry point supporting `add`, `list`, `complete`, `delete`, and `--help` commands; handles bad input with clean error messages and exit code 1; no raw stack trace dumps
-- **src/cli.test.ts** — 17 end-to-end tests running each command as a subprocess (proving persistence across invocations)
-- **package.json** — Added `start` and `test` scripts
-- **README.md** — Full documentation with usage, test instructions, and design rationale
+- **src/cli.ts**: Added `clear` case to the command switch — loads tasks,
+  counts them, saves an empty array, and prints the count.
+- **src/cli.test.ts**: Added two tests:
+  - `"clears all tasks and reports count"` — adds tasks, clears, verifies
+    empty store and correct output.
+  - `"clears empty store gracefully"` — clears an already-empty store,
+    verifies `"Cleared 0 tasks."`.
 
-### Tests run
+### Tests
 
-- `bun test` — 17 pass, 0 fail, 66 expect() calls (756ms)
+All 19 tests pass (`bun test`), including the 2 new clear tests.
