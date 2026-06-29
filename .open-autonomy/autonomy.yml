@@ -1,0 +1,157 @@
+schema: open-autonomy.autonomy.v1
+codeHost: github
+documents:
+  resources:
+    - .open-autonomy/architecture-invariants.yml
+    - .claude/settings.json
+    - .github/workflows/merge.yml
+    - .github/workflows/security.yml
+    - .github/dependabot.yml
+    - standards/workflow.md
+    - standards/issue-and-evidence.md
+    - standards/risk-and-review.md
+    - .github/workflows/codeql.yml
+    - .github/workflows/codeql-gate.yml
+    - .github/workflows/supply-chain.yml
+    - .github/workflows/human-approval.yml
+    - .github/workflows/dependency-review.yml
+    - .github/workflows/sbom.yml
+    - .github/workflows/evidence-collect.yml
+    - .github/workflows/retention.yml
+    - .github/workflows/heartbeat.yml
+    - SECURITY.md
+    - standards/compliance.md
+    - provision.json
+    - compliance/README.md
+    - compliance/control-matrix.md
+    - compliance/risk-register.md
+    - compliance/subprocessors.md
+    - compliance/policies/information-security-policy.md
+    - compliance/policies/access-control-policy.md
+    - compliance/policies/change-management-policy.md
+    - compliance/policies/vendor-management-policy.md
+    - compliance/policies/data-classification-and-retention-policy.md
+    - compliance/policies/encryption-policy.md
+    - compliance/policies/incident-response-policy.md
+    - compliance/policies/business-continuity-dr-policy.md
+    - compliance/policies/secure-sdlc-policy.md
+    - compliance/policies/risk-management-policy.md
+    - compliance/policies/acceptable-use-policy.md
+    - compliance/policies/hr-security-policy.md
+skills:
+  pm: .codex/skills/pm
+  draft: .codex/skills/draft
+  develop: .codex/skills/develop
+  reviewer: .codex/skills/reviewer
+agents:
+  pm:
+    skill: pm
+    workflowFile: pm.yml
+    triggers:
+      schedule: "*/15 * * * *"
+    capabilities:
+      - tasks:converse
+      - agent:launch
+      - agent:list
+  draft:
+    skill: draft
+    workflowFile: draft.yml
+    params:
+      ZTRACK_ISSUE: subject.ref
+    triggers:
+      dispatch: true
+    capabilities:
+      - tasks:author
+      - tasks:converse
+  develop:
+    skill: develop
+    workflowFile: develop.yml
+    params:
+      ZTRACK_ISSUE: subject.ref
+    triggers:
+      dispatch: true
+    capabilities:
+      - code:propose
+      - tasks:converse
+    review: reviewer
+  reviewer:
+    skill: reviewer
+    workflowFile: reviewer.yml
+    params:
+      TARGET_REF: subject.ref
+      SUBJECT_TEXT: subject.text
+      ACTOR_ROLE: subject.actorRole
+    triggers:
+      issue_comment:
+        types:
+          - created
+      pull_request_target:
+        types:
+          - opened
+          - synchronize
+          - reopened
+          - ready_for_review
+    timeout: 20
+    capabilities:
+      - code:review
+      - tasks:converse
+policy:
+  gh-actions:
+    propose_dispatch_checks:
+      - supply-chain.yml
+      - codeql-gate.yml
+    commit_signing: verified-api
+  wip:
+    maxInProgress: 1
+    maxInReview: 1
+  autonomy:
+    max_develop_attempts: 2
+  human:
+    maintainers_var: PUBLIC_AGENT_MAINTAINERS
+    sla_minutes: 1440
+    decision_types:
+      - approve
+      - decide
+      - answer
+      - inform
+  risk:
+    human_required_paths:
+      - .github/workflows/**
+      - .codex/skills/**
+      - .claude/skills/**
+      - .open-autonomy/**
+      - compliance/**
+      - SECURITY.md
+      - provision.json
+      - scheduler/run.mjs
+      - scheduler/schedule.json
+      - scripts/prompts/**
+      - scripts/agent.ts
+      - scripts/agent-propose.ts
+      - scripts/agent-visual-verify.ts
+      - scripts/autonomy-runner.mjs
+      - scripts/check-supply-chain.ts
+      - scripts/claude-agent-run.ts
+      - scripts/human-approval-gate.ts
+      - scripts/model-proxy-exchange.ts
+      - scripts/model-proxy-mint.ts
+      - scripts/model-proxy-revoke.ts
+      - scripts/rearm-auto-merge.ts
+      - scripts/reconcile-merged-issues.ts
+      - scripts/run-agent.mjs
+      - scripts/runner-defaults.mjs
+      - scripts/runner.ts
+      - scripts/transcript.ts
+      - profiles/**/skills/**
+      - .volter/tracker/validation/**
+    human_required_topics:
+      - auth
+      - secrets
+      - billing
+      - deployment
+      - destructive data migration
+      - dependency trust
+      - compliance
+      - access control
+      - audit logging
+      - data retention
