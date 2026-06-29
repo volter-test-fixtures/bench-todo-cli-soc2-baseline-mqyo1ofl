@@ -1,0 +1,5 @@
+{
+  "schema": "open-autonomy.visual-verify.v1",
+  "ran": false,
+  "reason": "no UI / Playwright harness detected"
+}
