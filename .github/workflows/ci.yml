@@ -1,16 +1,5 @@
 name: ci
-on:
-  workflow_dispatch:
-    inputs: { sha: {required: false}, pr: {required: false} }
+on: { workflow_dispatch: { inputs: { sha: {required: false}, pr: {required: false} } } }
 permissions: { contents: read, statuses: write }
 jobs:
-  ci:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
-        with: { ref: "${{ github.event.inputs.sha || github.sha }}" }
-      - name: trivial build/test + post ci status
-        env: { GH_TOKEN: "${{ github.token }}", SHA: "${{ github.event.inputs.sha }}" }
-        run: |
-          echo "adopter product CI (trivial for the testbed)"
-          gh api -X POST "repos/{owner}/{repo}/statuses/${SHA:-$GITHUB_SHA}" -f state=success -f context=ci -f description="ci passed" >/dev/null
+  ci: { runs-on: ubuntu-latest, steps: [ { env: { GH_TOKEN: "${{ github.token }}", SHA: "${{ github.event.inputs.sha }}" }, run: 'gh api -X POST "repos/{owner}/{repo}/statuses/${SHA:-$GITHUB_SHA}" -f state=success -f context=ci >/dev/null' } ] }
