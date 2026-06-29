@@ -1,0 +1,15 @@
+name: proof-sod-reviewer
+on: { workflow_dispatch: {} }
+permissions: { contents: read, statuses: write }   # the reviewer capability grant
+jobs:
+  sod:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - name: reviewer token CANNOT push contents (expect 403)
+        run: |
+          git config user.name x; git config user.email x@y.z
+          git checkout -b proof/sod-$RANDOM
+          git commit --allow-empty -m "sod probe"
+          if git push origin HEAD 2>/tmp/p; then echo "::error::reviewer token PUSHED — SoD FAILED"; exit 1; fi
+          echo "DENIED: $(grep -iE '403|permission|denied|protected' /tmp/p | head -1)"; echo "PROOF: code:review token cannot push contents"
