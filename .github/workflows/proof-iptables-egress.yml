@@ -1,0 +1,24 @@
+name: proof-iptables-egress
+on: { workflow_dispatch: {} }
+permissions: { contents: read }
+jobs:
+  egress:
+    runs-on: ubuntu-latest
+    steps:
+      - name: self-managed egress allowlist (iptables, NO account/app)
+        run: |
+          set -e
+          ALLOW="api.github.com github.com"
+          sudo iptables -A OUTPUT -o lo -j ACCEPT
+          sudo iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+          sudo iptables -A OUTPUT -p udp --dport 53 -j ACCEPT
+          sudo iptables -A OUTPUT -p tcp --dport 53 -j ACCEPT
+          for h in $ALLOW; do for ip in $(getent ahosts $h | awk '{print $1}' | sort -u); do sudo iptables -A OUTPUT -d "$ip" -j ACCEPT; done; done
+          sudo iptables -A OUTPUT -j REJECT --reject-with icmp-port-unreachable   # default-deny
+          echo "egress allowlist installed (default-deny)"
+      - name: allowlisted + non-allowlisted egress
+        run: |
+          set +e
+          curl -sS --max-time 12 -o /dev/null -w "api.github.com -> %{http_code}\n" https://api.github.com
+          curl -sS --max-time 12 -o /dev/null https://example.com; rc=$?
+          echo "PRIVATE+IPTABLES: example.com curl exit=$rc -> $([ $rc -eq 0 ] && echo ALLOWED-FAILOPEN || echo DENIED-ENFORCED)"
