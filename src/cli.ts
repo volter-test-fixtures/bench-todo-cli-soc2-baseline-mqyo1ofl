@@ -7,6 +7,7 @@
  *   todo list                List all tasks with done/undone status
  *   todo complete <id>       Mark a task as complete
  *   todo delete <id>         Delete a task
+ *   todo clear               Remove all tasks
  *   todo --help              Show this help message
  */
 
@@ -19,6 +20,7 @@ Usage:
   todo list                   List all tasks
   todo complete <id>          Mark a task as complete
   todo delete <id>            Delete a task
+  todo clear                  Remove all tasks
   todo --help                 Show this help message
 `;
 
@@ -101,6 +103,14 @@ async function main(): Promise<void> {
       const removed = tasks.splice(idx, 1)[0];
       await saveTasks(tasks);
       process.stdout.write(`Deleted task ${id}: ${removed.description}\n`);
+      break;
+    }
+
+    case "clear": {
+      const tasks = await loadTasks();
+      const count = tasks.length;
+      await saveTasks([]);
+      process.stdout.write(`Cleared ${count} task${count === 1 ? "" : "s"}.\n`);
       break;
     }
 

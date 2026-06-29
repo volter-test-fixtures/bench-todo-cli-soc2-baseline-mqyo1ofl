@@ -152,4 +152,28 @@ describe("todo-cli", () => {
     // Should see "[✓]" somewhere from prior complete test.
     expect(out).toMatch(/\[✓\]/);
   });
+
+  it("clears all tasks and reports count", async () => {
+    // Add a couple of tasks first.
+    const add1 = await $`bun run ${CLI} add "Clear task 1"`.text();
+    expect(add1).toMatch(/^Added task \d+: Clear task 1/);
+    const add2 = await $`bun run ${CLI} add "Clear task 2"`.text();
+    expect(add2).toMatch(/^Added task \d+: Clear task 2/);
+
+    // Clear them.
+    const clearOut = await $`bun run ${CLI} clear`.text();
+    expect(clearOut).toMatch(/^Cleared \d+ tasks?\./);
+
+    // Verify storage is empty.
+    const listOut = await $`bun run ${CLI} list`.text();
+    expect(listOut).toBe("No tasks.\n");
+  });
+
+  it("clears empty store gracefully", async () => {
+    // Ensure store is empty first.
+    await $`bun run ${CLI} clear`;
+
+    const clearOut = await $`bun run ${CLI} clear`.text();
+    expect(clearOut).toBe("Cleared 0 tasks.\n");
+  });
 });
