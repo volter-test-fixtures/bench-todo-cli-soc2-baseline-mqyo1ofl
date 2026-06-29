@@ -1,10 +1,16 @@
 #!/usr/bin/env bash
-# Self-managed, NO-ACCOUNT egress allowlist for PRIVATE GitHub-hosted runners (harden-runner Community blocks
-# only on public). Allows loopback + established + DNS + GitHub's published /meta ranges (keeps the Actions
-# runner control-plane alive) + the resolved IPs of EXTRA_ALLOW_HOSTS; everything else is default-DENY.
+# Self-managed, NO-ACCOUNT egress allowlist for GitHub-hosted runners — the free Harden-Runner Action only
+# BLOCKS on PUBLIC repos (Community tier), so this is the private-repo fallback that needs zero signup.
+# Allows: loopback + established + DNS + GitHub's published /meta IP ranges (so the Actions runner control
+# plane keeps working — without these the job hangs) + the resolved IPs of EXTRA_ALLOW_HOSTS (the agent's
+# own egress: model proxy, npm, github CDNs). Everything else is default-DENY (REJECT on OUTPUT, v4 + v6).
 set -euo pipefail
 command -v ipset >/dev/null || { sudo apt-get update -qq || true; sudo apt-get install -y ipset >/dev/null; }
-EXTRA="${EXTRA_ALLOW_HOSTS:-registry.npmjs.org objects.githubusercontent.com}"
+# Hosts the agent legitimately reaches beyond the /meta ranges (npm, github content CDNs) + the model proxy,
+# auto-derived from MODEL_PROXY_URL so wiring can never miss it (a missed proxy host would break every run).
+EXTRA="${EXTRA_ALLOW_HOSTS:-registry.npmjs.org objects.githubusercontent.com codeload.github.com release-assets.githubusercontent.com}"
+proxy_host="$(printf %s "${MODEL_PROXY_URL:-}" | sed -E 's#^https?://([^/]+).*#\1#')"
+[ -n "$proxy_host" ] && EXTRA="$EXTRA $proxy_host"
 sudo ipset create oa_allow4 hash:net -exist
 sudo ipset create oa_allow6 hash:net family inet6 -exist
 meta="$(curl -s --max-time 20 https://api.github.com/meta)"
