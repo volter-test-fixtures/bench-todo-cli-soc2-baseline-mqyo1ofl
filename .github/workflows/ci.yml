@@ -1,5 +1,21 @@
 name: ci
-on: { workflow_dispatch: { inputs: { sha: {required: false}, pr: {required: false} } } }
-permissions: { contents: read, statuses: write }
+on:
+  workflow_dispatch:
+    inputs:
+      sha: { required: false, type: string }
+      pr: { required: false, type: string }
+permissions:
+  contents: read
+  statuses: write
 jobs:
-  ci: { runs-on: ubuntu-latest, steps: [ { env: { GH_TOKEN: "${{ github.token }}", SHA: "${{ github.event.inputs.sha }}" }, run: 'gh api -X POST "repos/{owner}/{repo}/statuses/${SHA:-$GITHUB_SHA}" -f state=success -f context=ci >/dev/null' } ] }
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: post ci status (adopter product CI stub)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ github.event.inputs.sha }}
+        run: |
+          target="${SHA:-$GITHUB_SHA}"
+          echo "posting ci=success on $target"
+          gh api -X POST "repos/{owner}/{repo}/statuses/$target" -f state=success -f context=ci -f description="adopter CI (stub)"
