@@ -3,6 +3,7 @@
 # only on public). Allows loopback + established + DNS + GitHub's published /meta ranges (keeps the Actions
 # runner control-plane alive) + the resolved IPs of EXTRA_ALLOW_HOSTS; everything else is default-DENY.
 set -euo pipefail
+command -v ipset >/dev/null || { sudo apt-get update -qq || true; sudo apt-get install -y ipset >/dev/null; }
 EXTRA="${EXTRA_ALLOW_HOSTS:-registry.npmjs.org objects.githubusercontent.com}"
 sudo ipset create oa_allow4 hash:net -exist
 sudo ipset create oa_allow6 hash:net family inet6 -exist
@@ -21,4 +22,4 @@ sudo iptables  -A OUTPUT -m set --match-set oa_allow4 dst -j ACCEPT
 sudo ip6tables -A OUTPUT -m set --match-set oa_allow6 dst -j ACCEPT
 sudo iptables  -A OUTPUT -j REJECT --reject-with icmp-port-unreachable
 sudo ip6tables -A OUTPUT -j REJECT --reject-with icmp6-port-unreachable
-echo "egress-guard installed: $(sudo ipset list oa_allow4 | grep -c '^[0-9]') v4 nets + EXTRA($EXTRA), default-deny"
+echo "egress-guard installed: $(sudo ipset list oa_allow4 | grep -cE '^[0-9]') v4 nets + EXTRA($EXTRA), default-deny"
