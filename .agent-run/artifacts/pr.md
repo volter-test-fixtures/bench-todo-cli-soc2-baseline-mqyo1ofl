@@ -15,4 +15,6 @@ and prints how many tasks were removed.
 
 ### Tests
 
-All 19 tests pass (`bun test`), including the 2 new clear tests.
+All 19 tests pass (`bun test` — 71 expect() calls), including the 2 new clear tests.
+
+Closes #11
