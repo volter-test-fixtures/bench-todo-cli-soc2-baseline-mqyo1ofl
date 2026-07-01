@@ -1,5 +1,7 @@
 ## Add `clear` subcommand to remove all tasks
 
+Closes #11
+
 Adds a `todo clear` command that removes all tasks from persistent storage
 and prints how many tasks were removed.
 
